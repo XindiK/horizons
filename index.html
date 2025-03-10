@@ -20,22 +20,26 @@
         .game-container {
             position: relative;
             display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             gap: 20px;
-            flex-direction: column;  /* Stack elements vertically */
-            align-items: center;  /* Center horizontally */
         }
         canvas {
-            border: 1px solid #000000;
+            width: 740px;
+            height: 640px;
+            /* border: 1px solid #000000; */
         }
         #hintCanvas {
             position: absolute;
-            left: 0;        /* Align with maze canvas */
-            top: 0;         /* Align with maze canvas */
-            width: 700px;   /* Match maze canvas size */
-            height: 700px;  /* Match maze canvas size */
+            left: 50%;          /* Center horizontally */
+            top: 50%;          /* Center vertically */
+            transform: translate(-50%, -50%);  /* Perfect centering */
+            width: 640px;
+            height: 640px;
             border: none;
             z-index: 1;
-            pointer-events: none;  /* Allow clicks to pass through */
+            pointer-events: none;
         }
         .controls {
             margin-top: 10px;
@@ -126,10 +130,9 @@
             width: 100%;
             height: 100%;
             z-index: 1000;
-            display: none;
             background: black;
-            opacity: 0;  /* Start invisible */
-            transition: opacity 0.3s ease;  /* Add smooth transition */
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
         
         .story-overlay {
@@ -185,56 +188,94 @@
 
         .letter-content {
             background: white;
-            padding: 40px;
-            max-width: 600px;
+            padding: 32px;
+            max-width: 520px;  /* Slightly wider */
+            max-height: 90vh;  /* Taller to reduce need for scrolling */
             border-radius: 4px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            /* overflow-y: auto; */
         }
+
+        /* Add some styling for the scrollbar */
+        /* .letter-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .letter-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .letter-content::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        .letter-content::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        } */
 
         .letter-text {
             color: #000;
             font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-            line-height: 1.4;  /* Reduced from 1.8 */
+            font-size: 13px;  /* Slightly smaller base font */
+            line-height: 1.4;
             white-space: pre-line;
         }
 
-        /* Add specific spacing for paragraphs in letter */
-        .letter-text p {
-            margin: 8px 0;  /* Reduced spacing between paragraphs */
+        /* Make header smaller than body text */
+        .letter-text .header {
+            font-size: 12px;  /* Smaller than base text */
+            font-weight: 600;
+            margin-bottom: 12px;
+            text-transform: uppercase;  /* Keep it distinct */
+            letter-spacing: 0.5px;
         }
 
-        /* Add specific styling for the signature section */
+        /* Keep signature and quote small */
         .letter-signature {
-            margin-top: 16px;
-            margin-bottom: 16px;
+            margin-top: 12px;
+            margin-bottom: 12px;
+            font-size: 11px;
         }
 
         .letter-quote {
             font-style: italic;
             margin-bottom: 16px;
+            font-size: 11px;
         }
 
+        .letter-text p {
+            margin: 6px 0;  /* Reduce paragraph spacing */
+        }
+
+        /* Add specific styling for the signature section */
         .letter-text a {
             color: #0066cc;
             text-decoration: none;
             display: block;
             margin-top: 20px;
             text-align: right;
-            font-size: 14px;
+            font-size: 11px;
         }
 
         .letter-text a:hover {
             text-decoration: underline;
         }
 
-        .game-message {
-            color: white;
-            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-            font-size: 14px;
-            margin-bottom: 10px;  /* Space between message and maze */
-            /* opacity: 0;
-            transition: opacity 0.3s ease;
-        } */
+        /* Adjust letter logo size */
+        .letter-text img {
+            width: 64px !important;  /* 80 * 0.8 = 64 */
+            float: left;
+            margin-right: 16px;  /* 20 * 0.8 = 16 */
+        }
+
+        .maze-wrapper {
+            position: relative;  /* For hint canvas positioning */
+            display: flex;      /* Add this */
+            justify-content: center;  /* Add this */
+            align-items: center;      /* Add this */
+        }
     </style> 
 </head>
 <body>
@@ -246,10 +287,10 @@
         </div>
     </div>
     <div class="game-container">
-        <div id="gameMessage" class="game-message">press &uarr; &darr; &larr; &rarr; keys to navigate</div>
+        <div id="gameMessage" class="game-message" style="color: darkgray; font-family: courier;">press &uarr; &darr; &larr; &rarr; keys to navigate</div>
         <div class="maze-wrapper">
-            <canvas id="mazeCanvas" width="700" height="700"></canvas>
-            <canvas id="hintCanvas" width="700" height="700"></canvas>
+            <canvas id="mazeCanvas" width="740" height="640"></canvas>
+            <canvas id="hintCanvas" width="640" height="640"></canvas>
             <div id="coordTooltip"></div>
         </div>
     </div>
@@ -291,7 +332,7 @@
     <div class="letter-overlay" id="letterOverlay">
         <div class="letter-content">
             <div class="letter-text">
-                <img src="logo_black.png" alt="Horizon Systems Logo" style="width: 80px; float: left; margin-right: 20px;">
+                <img src="logo_black.png" alt="Horizon Systems Logo" style="width: 64px; float: left; margin-right: 16px;">
                 HORIZON SYSTEMS ORIENTATION DOCUMENT #274
                 
                 Dear Applicant N74320A, congratulations!
@@ -935,23 +976,8 @@
             }, 1000);
         });
 
-        // Modify the story overlay click handler
-        document.getElementById('storyOverlay').addEventListener('click', () => {
-            const storyOverlay = document.getElementById('storyOverlay');
-            const video = document.getElementById('introVideo');
-            const welcomeScreen = document.getElementById('welcomeScreen');
-            
-            storyOverlay.style.opacity = '0';
-            video.style.opacity = '0';
-            welcomeScreen.style.opacity = '0';
-            
-            setTimeout(() => {
-                storyOverlay.style.display = 'none';
-                video.style.display = 'none';
-                welcomeScreen.style.display = 'none';
-                document.removeEventListener('keydown', handleWelcomeScreen);
-            }, 1000);
-        });
+        // Remove the story overlay click handler
+        document.getElementById('storyOverlay').removeEventListener('click', () => {});
     </script>
 </body>
 </html>
