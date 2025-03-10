@@ -801,17 +801,16 @@
                     }
                     break;
                 case 'ArrowUp':
+                    movePlayer(0, -1);
+                    break;
                 case 'ArrowDown':
+                    movePlayer(0, 1);
+                    break;
                 case 'ArrowLeft':
+                    movePlayer(-1, 0);
+                    break;
                 case 'ArrowRight':
-                    // Hide the game message when any arrow key is pressed
-                    const gameMessage = document.getElementById('gameMessage');
-                    gameMessage.style.opacity = '0';
-                    // Handle movement
-                    if (event.key === 'ArrowUp') movePlayer(0, -1);
-                    else if (event.key === 'ArrowDown') movePlayer(0, 1);
-                    else if (event.key === 'ArrowLeft') movePlayer(-1, 0);
-                    else if (event.key === 'ArrowRight') movePlayer(1, 0);
+                    movePlayer(1, 0);
                     break;
             }
         });
@@ -870,51 +869,25 @@
             
             function handleWelcomeScreen(event) {
                 if (event.key === 'Enter' && welcomeScreen.style.display !== 'none') {
-                    // Show and fade in video
+                    // Show and play the video immediately
                     const video = document.getElementById('introVideo');
+                    const storyOverlay = document.getElementById('storyOverlay');
+                    
                     video.style.display = 'block';
                     requestAnimationFrame(() => {
                         video.style.opacity = '1';
+                        video.play();
                     });
 
-                    // Try to play video, but handle any errors gracefully
-                    video.play().catch(error => {
-                        console.log('Video autoplay failed:', error);
-                        // Trigger the ended event manually if play fails
-                        video.dispatchEvent(new Event('ended'));
+                    // Simple video end detection
+                    video.addEventListener("ended", function() {
+                        console.log("Video ended. Showing story overlay.");
+                        storyOverlay.style.display = 'flex';
+                        setTimeout(() => {
+                            storyOverlay.style.opacity = '1';
+                        }, 100);
                     });
-
-                    // Set up ended handler before trying to play
-                    video.addEventListener('ended', showStoryOverlay, { once: true });
                 }
-            }
-            
-            // Separate the story overlay logic into its own function
-            function showStoryOverlay() {
-                const storyOverlay = document.getElementById('storyOverlay');
-                const video = document.getElementById('introVideo');
-                const welcomeScreen = document.getElementById('welcomeScreen');
-
-                storyOverlay.style.display = 'flex';
-                
-                // Short delay before fading in the text
-                setTimeout(() => {
-                    storyOverlay.style.opacity = '1';
-                }, 100);
-                
-                // Add click handler to dismiss story and start game
-                storyOverlay.addEventListener('click', () => {
-                    storyOverlay.style.opacity = '0';
-                    video.style.opacity = '0';
-                    welcomeScreen.style.opacity = '0';
-                    
-                    setTimeout(() => {
-                        storyOverlay.style.display = 'none';
-                        video.style.display = 'none';
-                        welcomeScreen.style.display = 'none';
-                        document.removeEventListener('keydown', handleWelcomeScreen);
-                    }, 1000);
-                });
             }
             
             document.addEventListener('keydown', handleWelcomeScreen);
@@ -959,6 +932,24 @@
                 setTimeout(() => {
                     gameMessage.style.opacity = '0';
                 }, 5000);
+            }, 1000);
+        });
+
+        // Modify the story overlay click handler
+        document.getElementById('storyOverlay').addEventListener('click', () => {
+            const storyOverlay = document.getElementById('storyOverlay');
+            const video = document.getElementById('introVideo');
+            const welcomeScreen = document.getElementById('welcomeScreen');
+            
+            storyOverlay.style.opacity = '0';
+            video.style.opacity = '0';
+            welcomeScreen.style.opacity = '0';
+            
+            setTimeout(() => {
+                storyOverlay.style.display = 'none';
+                video.style.display = 'none';
+                welcomeScreen.style.display = 'none';
+                document.removeEventListener('keydown', handleWelcomeScreen);
             }, 1000);
         });
     </script>
