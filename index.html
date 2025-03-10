@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2D Maze Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #1c1a1a;  /* Match the canvas background */
+            margin: 0;
+            min-height: 100vh;  /* Full viewport height */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;  /* Center vertically */
+            padding: 20px;
+            overflow: hidden;  /* Disable scrolling */
+        }
+        .game-container {
+            position: relative;
+            display: flex;
+            gap: 20px;
+            flex-direction: column;  /* Stack elements vertically */
+            align-items: center;  /* Center horizontally */
+        }
+        canvas {
+            border: 1px solid #000000;
+        }
+        #hintCanvas {
+            position: absolute;
+            left: 0;        /* Align with maze canvas */
+            top: 0;         /* Align with maze canvas */
+            width: 700px;   /* Match maze canvas size */
+            height: 700px;  /* Match maze canvas size */
+            border: none;
+            z-index: 1;
+            pointer-events: none;  /* Allow clicks to pass through */
+        }
+        .controls {
+            margin-top: 10px;
+            color: #b5b5b5;
+            display: flex;
+            gap: 20px;
+        }
+        
+        #coordTooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: #b5b5b5;
+            padding: 5px;
+            border-radius: 3px;
+            font-size: 12px;
+            pointer-events: none;
+            display: none;
+        }
+        .gate-list {
+            color: #b5b5b5;
+            margin-top: 10px;
+            font-family: monospace;
+            max-width: 700px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .gate-coordinates {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 3px 6px;
+            border-radius: 3px;
+        }
+        .welcome-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: opacity 1s ease-out;  /* Smooth fade out */
+        }
+
+        .welcome-logo {
+            opacity: 0;
+            max-width: 100px;
+            transition: opacity 2s ease-in;
+        }
+
+        .welcome-text {
+            color: white;
+            /* font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; */
+            font-family: "Avenir Next", Avenir, sans-serif;
+            font-weight: 600; /* Semi-bold */
+            letter-spacing: 2px;;
+            text-align: center;
+            margin-top: 20px;
+            opacity: 0;
+            transition: opacity 1s ease-in;
+        }
+
+        .welcome-text h1 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            font-weight: 600;
+            letter-spacing: 4px;
+        }
+
+        .welcome-text p {
+            font-size: 14px;
+            color: #888;
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .intro-video {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            display: none;
+            background: black;
+            opacity: 0;  /* Start invisible */
+            transition: opacity 0.3s ease;  /* Add smooth transition */
+        }
+        
+        .story-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;  /* Changed from flex to none initially */
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;  /* Make sure it's above the video */
+            opacity: 0;
+            transition: opacity 1s ease-in;
+            padding: 20px;
+        }
+        
+        .story-text {
+            color: white;
+            font-family: "Courier New", Courier, monospace;
+            max-width: 800px;
+            line-height: 1.6;
+            white-space: pre-line;
+            text-align: left;
+        }
+        
+        .story-text a {
+            color: #4a9eff;
+            text-decoration: none;
+        }
+        
+        .story-text a:hover {
+            text-decoration: underline;
+        }
+
+        .letter-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);  /* Semi-transparent background */
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1002;
+            opacity: 0;
+            transition: opacity 0.3s ease;  /* Faster transition */
+        }
+
+        .letter-content {
+            background: white;
+            padding: 40px;
+            max-width: 600px;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .letter-text {
+            color: #000;
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            line-height: 1.4;  /* Reduced from 1.8 */
+            white-space: pre-line;
+        }
+
+        /* Add specific spacing for paragraphs in letter */
+        .letter-text p {
+            margin: 8px 0;  /* Reduced spacing between paragraphs */
+        }
+
+        /* Add specific styling for the signature section */
+        .letter-signature {
+            margin-top: 16px;
+            margin-bottom: 16px;
+        }
+
+        .letter-quote {
+            font-style: italic;
+            margin-bottom: 16px;
+        }
+
+        .letter-text a {
+            color: #0066cc;
+            text-decoration: none;
+            display: block;
+            margin-top: 20px;
+            text-align: right;
+            font-size: 14px;
+        }
+
+        .letter-text a:hover {
+            text-decoration: underline;
+        }
+
+        .game-message {
+            color: white;
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            font-size: 14px;
+            margin-bottom: 10px;  /* Space between message and maze */
+            /* opacity: 0;
+            transition: opacity 0.3s ease;
+        } */
+    </style> 
+</head>
+<body>
+    <div class="welcome-screen" id="welcomeScreen">
+        <img src="logo_white.png" alt="Horizons Logo" class="welcome-logo" id="welcomeLogo">
+        <div class="welcome-text" id="welcomeText">
+            <h1>WELCOME TO HORIZONS</h1>
+            <p>[press Enter to continue]</p>
+        </div>
+    </div>
+    <div class="game-container">
+        <div id="gameMessage" class="game-message">press &uarr; &darr; &larr; &rarr; keys to navigate</div>
+        <div class="maze-wrapper">
+            <canvas id="mazeCanvas" width="700" height="700"></canvas>
+            <canvas id="hintCanvas" width="700" height="700"></canvas>
+            <div id="coordTooltip"></div>
+        </div>
+    </div>
+    <div class="controls">
+        <div>
+            <input type="checkbox" id="gateToggle">
+            <label for="gateToggle">Show gates</label>
+        </div>
+        <div>
+            <input type="checkbox" id="coordToggle">
+            <label for="coordToggle">Show coordinates</label>
+        </div>
+        <div>
+            <input type="checkbox" id="editToggle">
+            <label for="editToggle">Edit maze</label>
+        </div>
+    </div>
+    <div id="gateList" class="gate-list"></div>
+    <video class="intro-video" id="introVideo">
+        <source src="intro.mp4" type="video/mp4">
+    </video>
+
+    <div class="story-overlay" id="storyOverlay">
+        <div class="story-text">
+            You wake up in a white hallway. The air conditioning is cold, and the fluorescent lights buzz softly above you. It feels familiar, but you don't know why.
+
+            You don't remember who you are, where you are, and have no idea why you're here.
+
+            In front of you, there's a door. To the right, a quiet clicking sound. A slot in the wall spits out a piece of paper.
+
+            The first line reads: 
+            
+            'Dear Applicant N74320A, Congratulations!'
+
+            <a href="#" id="readLetterLink">[Read the letter]</a>
+        </div>
+    </div>
+
+    <div class="letter-overlay" id="letterOverlay">
+        <div class="letter-content">
+            <div class="letter-text">
+                <img src="logo_black.png" alt="Horizon Systems Logo" style="width: 80px; float: left; margin-right: 20px;">
+                HORIZON SYSTEMS ORIENTATION DOCUMENT #274
+                
+                Dear Applicant N74320A, congratulations!
+                
+                You have been selected for a prestigious role in cutting-edge AI research. Your skills and cognitive profile set you apart, making you an essential part of our mission to reshape the future of intelligence.
+
+                You are now at the entrance to the Orientation Chamber, where you will progress through seven chapters designed to refine your knowledge and identity.
+
+                Each chapter of your orientation contains multiple Memory Points, designed to help reconstruct and refine your personal and intellectual identity. These memory flashes will feel real because, in a way, they are.
+
+                Your task is simple: Choose the memory that feels the most important to you.
+
+                Trust your instincts. Follow what feels true.
+
+                To ensure seamless integration, your Neuro-Interface has been installed, allowing you to fully engage with Horizon Systems' Memory Augmentation Protocol. Any initial disorientation is expected, do not be alarmed.
+                
+                At the completion of the seven chapters, you will be prepared to embark on the next phase of your journey with Horizon Systems.
+
+                <div class="letter-signature">Dr. Elias Varner<br>Chief Cognitive Architect<br>Horizon Systems</div>
+
+                <div class="letter-quote">"The future is not imagined—it is engineered."</div>
+
+                <a href="#" id="startGameLink">[ proceed to orientation chamber ]</a>
+            </div>
+        </div>
+    </div>
+    <script type="module">
+        import { gateHints } from './gate_hints.js';
+        import { maze } from './maze_data.js';
+        
+        //Notes： 
+        //1. Idea for plot: each layer represents a dream, multiple entry points to the next dream by falling asleep. Player needs to get to the inner most dream and successfully get out. Each entry point has a different rating on the valence and arousal chart, and together they form the hero's journey.
+        
+        const canvas = document.getElementById('mazeCanvas');
+        const ctx = canvas.getContext('2d');
+        const hintCanvas = document.getElementById('hintCanvas');
+        const hintCtx = hintCanvas.getContext('2d');
+
+        // Color constants
+        const gate_color = 'gold';
+        const wall_color = '#f0f0f0';
+        const gate_color_active = 'gold';
+
+        //python code for generating maze:
+        // matrix = [
+        //     [1 if min(i, 30-i, j, 30-j) % 2 == 0 else 0 for j in range(31)] 
+        //     for i in range(31)
+        // ]
+
+        // # To verify the pattern:
+        // for row in matrix:
+        //     print(row)
+
+        const cellSize = 20;
+        // Calculate offsets to center the maze
+        const mazeWidth = maze[0].length * cellSize;
+        const mazeHeight = maze.length * cellSize;
+        const xOffset = (canvas.width - mazeWidth) / 2;   // Center horizontally
+        const yOffset = (canvas.height - mazeHeight) / 2; // Center vertically
+        let playerX = -1;  // Start 2 cells to the left of the maze
+        let playerY = 1;
+
+        // Add this variable to track gate visibility
+        let showGates = false;
+
+        // Add this variable to track coordinate display
+        let showCoordinates = false;
+        const tooltip = document.getElementById('coordTooltip');
+
+        // Add event listener for checkbox
+        document.getElementById('gateToggle').addEventListener('change', (e) => {
+            showGates = e.target.checked;
+            update();
+        });
+
+        // Add event listener for coordinates toggle
+        document.getElementById('coordToggle').addEventListener('change', (e) => {
+            showCoordinates = e.target.checked;
+        });
+
+        // Add these variables to track previous position
+        let lastX = -1;
+        let lastY = 1;
+
+        // Add this after the color constants
+        const hintImages = {};
+        for (const key in gateHints) {
+            const img = new Image();
+            img.src = gateHints[key].image;
+            hintImages[key] = img;
+        }
+
+        let nearestGate = null;  // Make this a global variable
+
+        // Add after other variables
+        let editMode = false;
+        const gateList = document.getElementById('gateList');
+
+        // Add event listener for edit toggle
+        document.getElementById('editToggle').addEventListener('change', (e) => {
+            editMode = e.target.checked;
+            if (editMode) {
+                showGates = true;
+                document.getElementById('gateToggle').checked = true;
+            }
+            updateGateList();
+            update();
+        });
+
+        // Add click handler for maze editing
+        canvas.addEventListener('click', (e) => {
+            if (!editMode) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Convert to maze coordinates
+            const mazeX = Math.floor((x - xOffset) / cellSize);
+            const mazeY = Math.floor((y - yOffset) / cellSize);
+            
+            // Check if coordinates are within maze bounds
+            if (mazeX >= 0 && mazeX < maze[0].length && mazeY >= 0 && mazeY < maze.length) {
+                // Toggle between gate and wall
+                if (maze[mazeY][mazeX] === 1) {
+                    maze[mazeY][mazeX] = 2;  // Make it a gate
+                    // Add to gateHints if not exists
+                    const key = `${mazeX},${mazeY}`;
+                    if (!gateHints[key]) {
+                        gateHints[key] = {
+                            text: "New gate...",
+                            image: "images/dark/door.jpg"  // Default image
+                        };
+                        // Preload the image
+                        const img = new Image();
+                        img.src = gateHints[key].image;
+                        hintImages[key] = img;
+                    }
+                } else if (maze[mazeY][mazeX] === 2) {
+                    maze[mazeY][mazeX] = 1;  // Make it a wall
+                    // Remove from gateHints
+                    const key = `${mazeX},${mazeY}`;
+                    delete gateHints[key];
+                    delete hintImages[key];
+                }
+                updateGateList();
+                update();
+            }
+        });
+
+        function updateGateList() {
+            if (!editMode) {
+                gateList.style.display = 'none';
+                return;
+            }
+            
+            gateList.style.display = 'flex';
+            gateList.innerHTML = 'Gates: ';
+            
+            // Find all gates in the maze
+            const gates = [];
+            for (let y = 0; y < maze.length; y++) {
+                for (let x = 0; x < maze[y].length; x++) {
+                    if (maze[y][x] === 2) {
+                        gates.push(`${x},${y}`);
+                    }
+                }
+            }
+            
+            // Sort gates by coordinates
+            gates.sort();
+            
+            // Create gate list
+            gates.forEach(coord => {
+                const span = document.createElement('span');
+                span.className = 'gate-coordinates';
+                span.textContent = coord;
+                gateList.appendChild(span);
+            });
+        }
+
+        // Initialize checkbox state
+        document.getElementById('editToggle').checked = editMode;
+
+        // Add this function before drawMaze to check if the gate is the starting gate
+        function isStartGate(x, y) {
+            return x === 0 && y === 1;
+        }
+
+        // Add this after other state variables
+        let isInGate = false;  // Track if player is in a gate
+        let gateOpacity = 1.0;  // Track opacity for gate hints
+
+        function drawMaze() {
+            // First find the nearest accessible gate and its distance
+            nearestGate = null;  // Reset nearest gate
+            let minDistance = Infinity;
+            
+            if (!showGates && playerX >= 0 && playerY >= 0 && 
+                playerY < maze.length && playerX < maze[0].length) {
+                
+                for (let y = Math.max(0, playerY - 5); y < Math.min(maze.length, playerY + 6); y++) {
+                    for (let x = Math.max(0, playerX - 5); x < Math.min(maze[0].length, playerX + 6); x++) {
+                        if (maze[y][x] === 2) {
+                            const distance = Math.abs(playerX - x) + Math.abs(playerY - y);
+                            if (distance <= 5 && distance < minDistance && isGateAccessible(x, y)) {
+                                minDistance = distance;
+                                nearestGate = {x, y};
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Draw the maze with appropriate gate visibility
+            for (let y = 0; y < maze.length; y++) {
+                for (let x = 0; x < maze[y].length; x++) {
+                    if (isStartGate(x, y) && playerX < 0) {
+                        // Draw start gate as semi-transparent when player hasn't entered
+                        ctx.fillStyle = `rgba(181, 181, 181, 0.3)`;  // wall_color with transparency
+                        ctx.fillRect(x * cellSize + xOffset, y * cellSize + yOffset, cellSize, cellSize);
+                    } else if (maze[y][x] === 1) {
+                        ctx.fillStyle = wall_color;
+                        ctx.fillRect(x * cellSize + xOffset, y * cellSize + yOffset, cellSize, cellSize);
+                    } else if (maze[y][x] === 2) {
+                        if (showGates) {
+                            ctx.fillStyle = gate_color;
+                            ctx.fillRect(x * cellSize + xOffset, y * cellSize + yOffset, cellSize, cellSize);
+                        } else if (nearestGate && x === nearestGate.x && y === nearestGate.y) {
+                            // Draw wall first
+                            ctx.fillStyle = wall_color;
+                            ctx.fillRect(x * cellSize + xOffset, y * cellSize + yOffset, cellSize, cellSize);
+                            // Then overlay with background color at varying opacity
+                            const opacity = 1 - ((minDistance - 1) / 4);
+                            ctx.fillStyle = `rgba(28, 26, 26, ${opacity})`;
+                            ctx.fillRect(x * cellSize + xOffset, y * cellSize + yOffset, cellSize, cellSize);
+                        } else {
+                            ctx.fillStyle = wall_color;
+                            ctx.fillRect(x * cellSize + xOffset, y * cellSize + yOffset, cellSize, cellSize);
+                        }
+                    } else if (maze[y][x] === 3) {
+                        ctx.fillStyle = gate_color_active;
+                        ctx.fillRect(x * cellSize + xOffset, y * cellSize + yOffset, cellSize, cellSize);
+                    }
+                }
+            }
+        }
+
+        function drawPlayer() {
+            ctx.fillStyle = 'red';
+            ctx.beginPath();
+            ctx.ellipse(
+                playerX * cellSize + cellSize / 2 + xOffset,
+                playerY * cellSize + cellSize / 2 + yOffset,
+                cellSize / 4,
+                cellSize / 4,
+                0,
+                0,
+                Math.PI * 2
+            );
+            ctx.fill();
+        }
+
+        function getDistanceToNearestGate() {
+            let minDistance = Infinity;
+            let foundGate = false;
+            
+            // Only check if player is inside maze bounds
+            if (playerX >= 0 && playerY >= 0 && 
+                playerY < maze.length && playerX < maze[0].length) {
+                
+                // Check all cells within 5 distance
+                for (let y = Math.max(0, playerY - 5); y < Math.min(maze.length, playerY + 6); y++) {
+                    for (let x = Math.max(0, playerX - 5); x < Math.min(maze[0].length, playerX + 6); x++) {
+                        // Only consider unvisited gates (value 2)
+                        if (maze[y][x] === 2) {
+                            const distance = Math.abs(playerX - x) + Math.abs(playerY - y);
+                            // Check if this gate is accessible (not blocked by walls)
+                            if (distance < minDistance && isGateAccessible(x, y)) {
+                                minDistance = distance;
+                                foundGate = true;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            return foundGate && minDistance <= 5 ? minDistance : null;
+        }
+
+        // Helper function to check if a gate is accessible from the current layer
+        function isGateAccessible(gateX, gateY) {
+            // First get the gate's side property from gateHints
+            const gateKey = `${gateX},${gateY}`;
+            const gateData = gateHints[gateKey];
+            if (!gateData) return false;
+            
+            const side = gateData.side;
+            
+            // Check if gate should be inaccessible based on relative position and side
+            if (side === 1 && gateY < playerY) return false;  // Top side gate should be below player
+            if (side === 2 && gateX > playerX) return false;  // Right side gate should be left of player
+            if (side === 3 && gateY > playerY) return false;  // Bottom side gate should be above player
+            if (side === 4 && gateX < playerX) return false;  // Left side gate should be right of player
+
+            // Now check the original path-based accessibility
+            const isHorizontalPath = playerX > 0 && playerX < maze[0].length - 1 && 
+                                   maze[playerY][playerX-1] !== 1 && 
+                                   maze[playerY][playerX+1] !== 1;
+            
+            const isVerticalPath = playerY > 0 && playerY < maze.length - 1 && 
+                                 maze[playerY-1][playerX] !== 1 && 
+                                 maze[playerY+1][playerX] !== 1;
+            
+            // Check which directions are available at corners
+            const canMoveLeft = playerX > 0 && maze[playerY][playerX-1] !== 1;
+            const canMoveRight = playerX < maze[0].length - 1 && maze[playerY][playerX+1] !== 1;
+            const canMoveUp = playerY > 0 && maze[playerY-1][playerX] !== 1;
+            const canMoveDown = playerY < maze.length - 1 && maze[playerY+1][playerX] !== 1;
+
+            // Calculate distance components
+            const dx = gateX - playerX;  // Not using abs() to determine direction
+            const dy = gateY - playerY;
+
+            // Check accessibility based on path type
+            if (isHorizontalPath && !isVerticalPath) {
+                // On horizontal path - can only access gates on same row or 1 cell up/down
+                return Math.abs(dy) <= 1;
+            } else if (isVerticalPath && !isHorizontalPath) {
+                // On vertical path - can only access gates on same column or 1 cell left/right
+                return Math.abs(dx) <= 1;
+            } else if (!isHorizontalPath && !isVerticalPath) {
+                // At a corner - check specific corner type and allowed directions
+                if (canMoveUp && canMoveRight) {
+                    return (dy <= 0 && Math.abs(dy) <= 1) || (dx >= 0 && Math.abs(dx) <= 1);
+                } else if (canMoveUp && canMoveLeft) {
+                    return (dy <= 0 && Math.abs(dy) <= 1) || (dx <= 0 && Math.abs(dx) <= 1);
+                } else if (canMoveDown && canMoveRight) {
+                    return (dy >= 0 && Math.abs(dy) <= 1) || (dx >= 0 && Math.abs(dx) <= 1);
+                } else if (canMoveDown && canMoveLeft) {
+                    return (dy >= 0 && Math.abs(dy) <= 1) || (dx <= 0 && Math.abs(dx) <= 1);
+                }
+            }
+
+            return false;
+        }
+
+        function drawHint() {
+            hintCtx.clearRect(0, 0, hintCanvas.width, hintCanvas.height);
+
+            if (nearestGate || isInGate) {
+                const gateKey = isInGate ? `${playerX},${playerY}` : `${nearestGate.x},${nearestGate.y}`;
+                const hintData = gateHints[gateKey];
+                
+                if (hintData) {
+                    // Use gateOpacity when in gate, otherwise calculate based on distance
+                    const opacity = isInGate ? gateOpacity : (1 - ((Math.abs(playerX - nearestGate.x) + 
+                                               Math.abs(playerY - nearestGate.y) - 1) / 4)) * 0.5;
+                    
+                    // Draw image with current opacity
+                    const img = hintImages[gateKey];
+                    if (img.complete) {
+                        hintCtx.globalAlpha = opacity;
+                        
+                        // Calculate dimensions to maintain aspect ratio
+                        const scale = Math.max(
+                            hintCanvas.width / img.width,
+                            hintCanvas.height / img.height
+                        );
+                        
+                        // Calculate dimensions of scaled image
+                        const scaledWidth = img.width * scale;
+                        const scaledHeight = img.height * scale;
+                        
+                        // Calculate positioning to center the image
+                        const x = (hintCanvas.width - scaledWidth) / 2;
+                        const y = (hintCanvas.height - scaledHeight) / 2;
+                        
+                        hintCtx.drawImage(img, x, y, scaledWidth, scaledHeight);
+                    }
+                    
+                    // Draw text with same opacity
+                    hintCtx.globalAlpha = opacity;
+                    hintCtx.fillStyle = '#b5b5b5';
+                    hintCtx.font = '16px Arial';
+                    hintCtx.textAlign = 'center';
+                    hintCtx.textBaseline = 'middle';
+                    
+                    // Add text shadow
+                    hintCtx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+                    hintCtx.shadowBlur = 40;
+                    hintCtx.shadowOffsetX = 0;
+                    hintCtx.shadowOffsetY = 0;
+                    
+                    // Word wrap the text
+                    const words = hintData.text.split(' ');
+                    let line = '';
+                    let y = hintCanvas.height / 2;
+                    const lineHeight = 24;
+                    const maxWidth = hintCanvas.width - 20;
+                    
+                    words.forEach(word => {
+                        const testLine = line + word + ' ';
+                        const metrics = hintCtx.measureText(testLine);
+                        
+                        if (metrics.width > maxWidth) {
+                            hintCtx.fillText(line, hintCanvas.width / 2, y);
+                            line = word + ' ';
+                            y += lineHeight;
+                        } else {
+                            line = testLine;
+                        }
+                    });
+                    hintCtx.fillText(line, hintCanvas.width / 2, y);
+                    
+                    hintCtx.globalAlpha = 1.0;
+                }
+            }
+        }
+
+        function update() {
+            // Update maze canvas
+            ctx.fillStyle = '#1c1a1a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            drawMaze();
+            drawPlayer();
+            
+            // Update hint canvas
+            drawHint();
+        }
+
+        function movePlayer(dx, dy) {
+            // If player is in gate, only allow movement after pressing enter
+            if (isInGate) {
+                return;
+            }
+
+            const newX = playerX + dx;
+            const newY = playerY + dy;
+            
+            // Special case for the starting gate
+            if (isStartGate(newX, newY)) {
+                // Allow entry from outside the maze
+                if (playerX < 0) {
+                    playerX = newX;
+                    playerY = newY;
+                    // Close the gate after player enters
+                    maze[1][0] = 1;  // Change to wall
+                    update();
+                    return;
+                }
+            }
+            
+            // If player is on a gate, prevent moving back to their last position
+            if (playerX >= 0 && playerY >= 0 && 
+                playerY < maze.length && 
+                playerX < maze[0].length && 
+                maze[playerY][playerX] === 3 && 
+                newX === lastX && 
+                newY === lastY) {
+                return; // Prevent moving back
+            }
+            
+            // Store current position before moving
+            lastX = playerX;
+            lastY = playerY;
+            
+            // First, change the previous gold square to a wall if we were on one
+            if (playerX >= 0 && playerY >= 0 && playerY < maze.length && playerX < maze[0].length && maze[playerY][playerX] === 3) {
+                maze[playerY][playerX] = 1;  // Change to wall when moving off
+            }
+            
+            // Check if new position is inside maze
+            if (newX >= 0 && newY >= 0 && newY < maze.length && newX < maze[0].length) {
+                // Inside maze - check for walls and special squares
+                if (maze[newY][newX] === 0 || maze[newY][newX] === 2) {
+                    playerX = newX;
+                    playerY = newY;
+                    
+                    if (maze[newY][newX] === 2) {
+                        maze[newY][newX] = 3;
+                        isInGate = true;  // Set gate state when entering gate
+                        gateOpacity = 1.0;  // Reset opacity when entering new gate
+                    }
+                }
+            } else {
+                // Outside maze - allow free movement within canvas bounds
+                if (newX * cellSize + xOffset >= 0 && 
+                    newX * cellSize + xOffset < canvas.width - cellSize && 
+                    newY * cellSize >= 0 && 
+                    newY * cellSize < canvas.height - cellSize) {
+                    playerX = newX;
+                    playerY = newY;
+                }
+            }
+            
+            update();
+        }
+
+        window.addEventListener('keydown', (event) => {
+            switch (event.key) {
+                case 'Enter':
+                    if (isInGate) {
+                        gateOpacity = 0;  // Set opacity to 0
+                        isInGate = false;  // Allow movement again
+                        update();  // Update display
+                    }
+                    break;
+                case 'ArrowUp':
+                    movePlayer(0, -1);
+                    break;
+                case 'ArrowDown':
+                    movePlayer(0, 1);
+                    break;
+                case 'ArrowLeft':
+                    movePlayer(-1, 0);
+                    break;
+                case 'ArrowRight':
+                    movePlayer(1, 0);
+                    break;
+            }
+        });
+
+        // Add mouse move handler
+        canvas.addEventListener('mousemove', (e) => {
+            if (!showCoordinates) {
+                tooltip.style.display = 'none';
+                return;
+            }
+
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Convert to maze coordinates
+            const mazeX = Math.floor((x - xOffset) / cellSize);
+            const mazeY = Math.floor((y - yOffset) / cellSize);
+            
+            // Check if coordinates are within maze bounds
+            if (mazeX >= 0 && mazeX < maze[0].length && mazeY >= 0 && mazeY < maze.length) {
+                tooltip.style.display = 'block';
+                tooltip.style.left = (e.clientX + 10) + 'px';
+                tooltip.style.top = (e.clientY + 10) + 'px';
+                tooltip.textContent = `(${mazeX},${mazeY}) - Value: ${maze[mazeY][mazeX]}`;
+            } else {
+                tooltip.style.display = 'none';
+            }
+        });
+
+        // Hide tooltip when mouse leaves canvas
+        canvas.addEventListener('mouseleave', () => {
+            tooltip.style.display = 'none';
+        });
+
+        // Initialize checkbox states
+        document.getElementById('gateToggle').checked = showGates;
+        document.getElementById('coordToggle').checked = showCoordinates;
+
+        update();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const welcomeScreen = document.getElementById('welcomeScreen');
+            const welcomeLogo = document.getElementById('welcomeLogo');
+            const welcomeText = document.getElementById('welcomeText');
+            
+            // Start logo fade in
+            setTimeout(() => {
+                welcomeLogo.style.opacity = '1';
+            }, 500);
+            
+            // Show welcome text after logo fade
+            setTimeout(() => {
+                welcomeText.style.opacity = '1';
+            }, 2500);
+            
+            function handleWelcomeScreen(event) {
+                if (event.key === 'Enter' && welcomeScreen.style.display !== 'none') {
+                    // Show and play the video immediately
+                    const video = document.getElementById('introVideo');
+                    video.style.display = 'block';
+                    // Short delay to allow display:block to take effect
+                    requestAnimationFrame(() => {
+                        video.style.opacity = '1';  // Fade in video
+                        video.play();
+                    });
+                    
+                    // When video ends, show the story overlay
+                    video.addEventListener('ended', () => {
+                        const storyOverlay = document.getElementById('storyOverlay');
+                        storyOverlay.style.display = 'flex';
+                        
+                        // Short delay before fading in the text
+                        setTimeout(() => {
+                            storyOverlay.style.opacity = '1';
+                        }, 100);
+                        
+                        // Add click handler to dismiss story and start game
+                        storyOverlay.addEventListener('click', () => {
+                            storyOverlay.style.opacity = '0';
+                            video.style.opacity = '0';
+                            welcomeScreen.style.opacity = '0';  // Fade out welcome screen last
+                            
+                            setTimeout(() => {
+                                storyOverlay.style.display = 'none';
+                                video.style.display = 'none';
+                                welcomeScreen.style.display = 'none';
+                                document.removeEventListener('keydown', handleWelcomeScreen);
+                            }, 1000);
+                        });
+                    });
+                }
+            }
+            
+            document.addEventListener('keydown', handleWelcomeScreen);
+        });
+
+        // Modify the click handlers
+        document.getElementById('readLetterLink').addEventListener('click', (e) => {
+            e.preventDefault();
+            const letterOverlay = document.getElementById('letterOverlay');
+            letterOverlay.style.display = 'flex';
+            requestAnimationFrame(() => {
+                letterOverlay.style.opacity = '1';
+            });
+        });
+
+        document.getElementById('startGameLink').addEventListener('click', (e) => {
+            e.preventDefault();
+            const letterOverlay = document.getElementById('letterOverlay');
+            const storyOverlay = document.getElementById('storyOverlay');
+            const video = document.getElementById('introVideo');
+            const welcomeScreen = document.getElementById('welcomeScreen');
+            const gameMessage = document.getElementById('gameMessage');
+
+            // Fade out all overlays
+            letterOverlay.style.opacity = '0';
+            storyOverlay.style.opacity = '0';
+            video.style.opacity = '0';
+            welcomeScreen.style.opacity = '0';
+
+            // Remove overlays and show message
+            setTimeout(() => {
+                letterOverlay.style.display = 'none';
+                storyOverlay.style.display = 'none';
+                video.style.display = 'none';
+                welcomeScreen.style.display = 'none';
+                document.removeEventListener('keydown', handleWelcomeScreen);
+
+                // Show message
+                gameMessage.style.opacity = '1';
+                
+                // Hide message after 5 seconds
+                setTimeout(() => {
+                    gameMessage.style.opacity = '0';
+                }, 5000);
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
