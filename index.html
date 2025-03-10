@@ -30,16 +30,49 @@
             height: 640px;
             /* border: 1px solid #000000; */
         }
-        #hintCanvas {
+        .hint-container {
             position: absolute;
-            left: 50%;          /* Center horizontally */
-            top: 50%;          /* Center vertically */
-            transform: translate(-50%, -50%);  /* Perfect centering */
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
             width: 640px;
             height: 640px;
-            border: none;
-            z-index: 1;
+            overflow: hidden;
+            /* transition: width 0.02s ease; */
+        }
+
+        .hint-container.expanded {
+            width: 1000px;
+        }
+
+        .hint-image {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: cover;
+            opacity: 0;
+            /* Only transition for fade out */
+            transition: opacity 1s ease-out;
+            /* Add will-change to improve performance */
+            will-change: opacity;
+        }
+
+        #hintCanvas {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
             pointer-events: none;
+            z-index: 1;
+            /* Only transition for fade out */
+            transition: opacity 1s ease-out;
+            will-change: opacity;
         }
         .controls {
             margin-top: 10px;
@@ -276,6 +309,52 @@
             justify-content: center;  /* Add this */
             align-items: center;      /* Add this */
         }
+
+        .hint-background {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            transition: opacity 1s ease-out;
+            z-index: 1;  /* Between image and text */
+        }
+
+        .hint-text {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            color: #b5b5b5;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            text-align: left;
+            white-space: pre-line;
+            z-index: 2;
+            opacity: 0;
+            transition: opacity 1s ease-out;
+            text-shadow: 0 0 40px rgba(0, 0, 0, 0.7);
+            pointer-events: none;
+            max-width: 640px;
+        }
+
+        .hint-reminder {
+            position: absolute;
+            left: 50%;
+            bottom: 40px;  /* Distance from bottom */
+            transform: translateX(-50%);
+            color: #b5b5b5;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            text-align: center;
+            z-index: 2;
+            opacity: 0;
+            transition: opacity 1s ease-out;
+            text-shadow: 0 0 40px rgba(0, 0, 0, 0.7);
+            pointer-events: none;
+        }
     </style> 
 </head>
 <body>
@@ -287,13 +366,22 @@
         </div>
     </div>
     <div class="game-container">
-        <div id="gameMessage" class="game-message" style="color: darkgray; font-family: courier;">press &uarr; &darr; &larr; &rarr; keys to navigate</div>
+        <div id="gameMessage" class="game-message" style="color: rgb(153, 153, 153); font-size: 12px; font-family: courier;">press &uarr; &darr; &larr; &rarr; keys to navigate</div>
         <div class="maze-wrapper">
             <canvas id="mazeCanvas" width="740" height="640"></canvas>
-            <canvas id="hintCanvas" width="640" height="640"></canvas>
+            <div class="hint-container" id="hintContainer">
+                <img id="hintImage" class="hint-image">
+                <div id="hintBackground" class="hint-background"></div>
+                <div id="hintText" class="hint-text"></div>
+                <div id="hintReminder" class="hint-reminder">press Enter to continue</div>
+                <canvas id="hintCanvas" width="640" height="640"></canvas>
+            </div>
             <div id="coordTooltip"></div>
         </div>
     </div>
+
+
+<!-- ----------------------------------------Hide from player------------------------------------------ -->
     <div class="controls">
         <div>
             <input type="checkbox" id="gateToggle">
@@ -308,6 +396,8 @@
             <label for="editToggle">Edit maze</label>
         </div>
     </div>
+<!-- ----------------------------------------Hide from player------------------------------------------>
+
     <div id="gateList" class="gate-list"></div>
     <video class="intro-video" id="introVideo">
         <source src="intro.mp4" type="video/mp4">
@@ -688,67 +778,56 @@
                 const hintData = gateHints[gateKey];
                 
                 if (hintData) {
-                    // Use gateOpacity when in gate, otherwise calculate based on distance
                     const opacity = isInGate ? gateOpacity : (1 - ((Math.abs(playerX - nearestGate.x) + 
-                                               Math.abs(playerY - nearestGate.y) - 1) / 4)) * 0.5;
+                                       Math.abs(playerY - nearestGate.y) - 1) / 4)) * 0.5;
                     
-                    // Draw image with current opacity
+                    // Set image source and opacity immediately
                     const img = hintImages[gateKey];
-                    if (img.complete) {
-                        hintCtx.globalAlpha = opacity;
+                    const hintImage = document.getElementById('hintImage');
+                    const hintText = document.getElementById('hintText');
+                    const hintBackground = document.getElementById('hintBackground');
+                    const hintReminder = document.getElementById('hintReminder');
+                    hintImage.src = img.src;
+                    
+                    // Remove transition temporarily for immediate opacity changes
+                    if (!isInGate) {
+                        hintImage.style.transition = 'none';
+                        hintText.style.transition = 'none';
+                        hintBackground.style.transition = 'none';
+                        hintReminder.style.transition = 'none';
                         
-                        // Calculate dimensions to maintain aspect ratio
-                        const scale = Math.max(
-                            hintCanvas.width / img.width,
-                            hintCanvas.height / img.height
-                        );
-                        
-                        // Calculate dimensions of scaled image
-                        const scaledWidth = img.width * scale;
-                        const scaledHeight = img.height * scale;
-                        
-                        // Calculate positioning to center the image
-                        const x = (hintCanvas.width - scaledWidth) / 2;
-                        const y = (hintCanvas.height - scaledHeight) / 2;
-                        
-                        hintCtx.drawImage(img, x, y, scaledWidth, scaledHeight);
+                        void hintImage.offsetWidth;
+                        void hintText.offsetWidth;
+                        void hintBackground.offsetWidth;
+                        void hintReminder.offsetWidth;
                     }
                     
-                    // Draw text with same opacity
-                    hintCtx.globalAlpha = opacity;
-                    hintCtx.fillStyle = '#b5b5b5';
-                    hintCtx.font = '16px Arial';
-                    hintCtx.textAlign = 'center';
-                    hintCtx.textBaseline = 'middle';
+                    hintImage.style.opacity = opacity;
                     
-                    // Add text shadow
-                    hintCtx.shadowColor = 'rgba(0, 0, 0, 0.7)';
-                    hintCtx.shadowBlur = 40;
-                    hintCtx.shadowOffsetX = 0;
-                    hintCtx.shadowOffsetY = 0;
+                    // Only show text and background when in gate, with delay
+                    if (isInGate) {
+                        hintText.textContent = hintData.text;
+                        hintReminder.textContent = 'press Enter to continue';
+                        setTimeout(() => {
+                            hintBackground.style.opacity = opacity;
+                            hintText.style.opacity = opacity;
+                            hintReminder.style.opacity = opacity;  // Show reminder with text
+                        }, 2000);
+                    } else {
+                        hintText.style.opacity = 0;
+                        hintBackground.style.opacity = 0;
+                        hintReminder.style.opacity = 0;  // Hide reminder
+                    }
                     
-                    // Word wrap the text
-                    const words = hintData.text.split(' ');
-                    let line = '';
-                    let y = hintCanvas.height / 2;
-                    const lineHeight = 24;
-                    const maxWidth = hintCanvas.width - 20;
-                    
-                    words.forEach(word => {
-                        const testLine = line + word + ' ';
-                        const metrics = hintCtx.measureText(testLine);
-                        
-                        if (metrics.width > maxWidth) {
-                            hintCtx.fillText(line, hintCanvas.width / 2, y);
-                            line = word + ' ';
-                            y += lineHeight;
-                        } else {
-                            line = testLine;
-                        }
-                    });
-                    hintCtx.fillText(line, hintCanvas.width / 2, y);
-                    
-                    hintCtx.globalAlpha = 1.0;
+                    // Restore transition for fade out
+                    if (!isInGate) {
+                        requestAnimationFrame(() => {
+                            hintImage.style.transition = 'opacity 1s ease-out';
+                            hintText.style.transition = 'opacity 1s ease-out';
+                            hintBackground.style.transition = 'opacity 1s ease-out';
+                            hintReminder.style.transition = 'opacity 1s ease-out';
+                        });
+                    }
                 }
             }
         }
@@ -814,8 +893,9 @@
                     
                     if (maze[newY][newX] === 2) {
                         maze[newY][newX] = 3;
-                        isInGate = true;  // Set gate state when entering gate
-                        gateOpacity = 1.0;  // Reset opacity when entering new gate
+                        isInGate = true;
+                        gateOpacity = 1.0;
+                        document.getElementById('hintContainer').classList.add('expanded');
                     }
                 }
             } else {
@@ -832,13 +912,54 @@
             update();
         }
 
+        // Move S key handler to global scope
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'S' || event.key === 's') {
+                const welcomeScreen = document.getElementById('welcomeScreen');
+                if (welcomeScreen.style.display !== 'none') {
+                    // Skip to game start
+                    const letterOverlay = document.getElementById('letterOverlay');
+                    const storyOverlay = document.getElementById('storyOverlay');
+                    const video = document.getElementById('introVideo');
+                    const gameMessage = document.getElementById('gameMessage');
+
+                    // Hide all overlays immediately
+                    letterOverlay.style.display = 'none';
+                    storyOverlay.style.display = 'none';
+                    video.style.display = 'none';
+                    welcomeScreen.style.display = 'none';
+
+                    // Show and fade out game message
+                    gameMessage.style.opacity = '1';
+                    setTimeout(() => {
+                        gameMessage.style.opacity = '0';
+                    }, 5000);
+                }
+            }
+        });
+
         window.addEventListener('keydown', (event) => {
             switch (event.key) {
                 case 'Enter':
                     if (isInGate) {
-                        gateOpacity = 0;  // Set opacity to 0
-                        isInGate = false;  // Allow movement again
-                        update();  // Update display
+                        // Set all opacities to 0 immediately
+                        gateOpacity = 0;
+                        const hintImage = document.getElementById('hintImage');
+                        const hintText = document.getElementById('hintText');
+                        const hintBackground = document.getElementById('hintBackground');
+                        const hintReminder = document.getElementById('hintReminder');
+                        
+                        hintImage.style.opacity = 0;
+                        hintText.style.opacity = 0;
+                        hintBackground.style.opacity = 0;
+                        hintReminder.style.opacity = 0;  // Fade out reminder
+                        
+                        // Wait for fade out to complete before resetting state
+                        setTimeout(() => {
+                            isInGate = false;
+                            document.getElementById('hintContainer').classList.remove('expanded');
+                            update();
+                        }, 1000);
                     }
                     break;
                 case 'ArrowUp':
@@ -937,11 +1058,22 @@
         // Modify the click handlers
         document.getElementById('readLetterLink').addEventListener('click', (e) => {
             e.preventDefault();
+            const storyOverlay = document.getElementById('storyOverlay');
             const letterOverlay = document.getElementById('letterOverlay');
-            letterOverlay.style.display = 'flex';
-            requestAnimationFrame(() => {
-                letterOverlay.style.opacity = '1';
-            });
+
+            // First fade out the story overlay
+            storyOverlay.style.opacity = '0';
+
+            // After story overlay fades out, show letter
+            setTimeout(() => {
+                storyOverlay.style.display = 'none';
+                letterOverlay.style.display = 'flex';
+                
+                // Short delay before fading in the letter
+                requestAnimationFrame(() => {
+                    letterOverlay.style.opacity = '1';
+                });
+            }, 1000); // Match the transition duration from CSS
         });
 
         document.getElementById('startGameLink').addEventListener('click', (e) => {
