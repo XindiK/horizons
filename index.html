@@ -329,7 +329,7 @@
             transform: translate(-50%, -50%);
             color: #b5b5b5;
             font-family: Arial, sans-serif;
-            font-size: 16px;
+            font-size: 12px;  /* Changed from 16px to 14px */
             text-align: left;
             white-space: pre-line;
             z-index: 2;
@@ -338,6 +338,7 @@
             text-shadow: 0 0 40px rgba(0, 0, 0, 0.7);
             pointer-events: none;
             max-width: 640px;
+            line-height: 1.2;  /* Added line-height for better readability */
         }
 
         .hint-reminder {
@@ -354,6 +355,113 @@
             transition: opacity 1s ease-out;
             text-shadow: 0 0 40px rgba(0, 0, 0, 0.7);
             pointer-events: none;
+        }
+
+        .completion-video {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            background: black;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            display: none;
+        }
+
+        .completion-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+            opacity: 0;
+            transition: opacity 1s ease-in;
+            padding: 20px;
+        }
+
+        .completion-text {
+            color: white;
+            font-family: "Courier New", Courier, monospace;
+            max-width: 800px;
+            line-height: 1.6;
+            white-space: pre-line;
+            text-align: left;
+        }
+
+        .completion-text a {
+            color: #4a9eff;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 20px;
+        }
+
+        .completion-text a:hover {
+            text-decoration: underline;
+        }
+
+        .completion-letter-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1003;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .final-choice-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1004;
+            opacity: 0;
+            transition: opacity 1s ease-in;
+            padding: 20px;
+        }
+
+        .final-choice-overlay a {
+            display: block;
+            margin-top: 20px;
+            color: #4a9eff;
+            text-decoration: none;
+        }
+
+        .final-choice-overlay a:hover {
+            text-decoration: underline;
+        }
+
+        .center-video {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            background: black;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            display: none;
         }
     </style> 
 </head>
@@ -449,8 +557,96 @@
             </div>
         </div>
     </div>
+
+    <!-- Add these elements after the letter-overlay div -->
+    <video class="completion-video" id="completionVideo">
+        <source src="center.mp4" type="video/mp4">
+    </video>
+
+    <div class="completion-overlay" id="completionOverlay">
+        <div class="completion-text">
+            You step into the final chamber. The air feels heavier here, like the room has been here for an eternity.
+
+            A soft chime echoes through the room. The fluorescent glow above you pulses in slow, rhythmic waves—calming, deliberate. A screen flickers to life on the far wall.
+
+            'Orientation Complete.'
+
+            You feel… different. Lighter. As if something has been taken from you. Or maybe you simply left it behind.
+
+            A quiet beep. A single prompt appears on the screen:
+
+            <a href="#" id="viewCompletionLink">[View Completion Notice]</a>
+        </div>
+    </div>
+
+    <!-- Add this after the completion overlay -->
+    <div class="completion-letter-overlay" id="completionLetterOverlay">
+        <div class="letter-content">
+            <div class="letter-text">
+                <img src="logo_black.png" alt="Horizon Systems Logo" style="width: 64px; float: left; margin-right: 16px;">
+                HORIZON SYSTEMS COMPLETION DOCUMENT #275
+                
+                You have successfully completed the Project Eidolon Orientation Program and are now fully integrated into Horizon Systems. Your dedication, adaptability, and cognitive alignment have demonstrated your readiness to embark on the next phase of this groundbreaking initiative.
+
+                As a result of your participation, your mental and emotional frameworks have been optimized, ensuring peak performance and seamless collaboration within our research division. The temporary cognitive realignment process has now concluded, allowing for a fully stabilized identity within the Horizon Systems framework.
+
+                Final Instructions
+                	•	Please ensure full compliance with internal confidentiality protocols at all times.
+                	•	Any lingering discrepancies in memory recall should be disregarded, as they are a standard effect of cognitive adaptation.
+                	•	Your assigned directives will be provided upon your next system synchronization.
+
+                Your Journey Begins Now
+
+                The future of intelligence depends on pioneers like you. You have been chosen. You have been refined. You are ready.
+
+                Proceed to your next phase when ready.
+
+                Welcome to Horizon Systems.
+
+                <div class="letter-signature">
+                    Dr. Elizabeth Chen
+                    Director of Integration
+                    Project Eidolon
+                    Horizon Systems
+                </div>
+
+                <div class="letter-actions" style="margin-top: 30px; text-align: right;">
+                    <a href="#" id="putAwayLink" style="margin-right: 20px;">Finish Reading</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add this after the completion letter overlay -->
+    <div class="final-choice-overlay" id="finalChoiceOverlay">
+        <div class="story-text">
+            You stare at the letter, fingers resting on the paper's smooth, synthetic texture. The words feel cold, impersonal—like they were never really meant for you. Something about this doesn't feel right.
+
+            You try to recall the moment you arrived here, but nothing comes. Just fragments. Fluorescent lights. The distant hum of air conditioning. A pulse of déjà vu grips you. You've stood here before. You're certain of it. But how many times?
+
+            The screen on the far wall flickers, lines of text shifting under its surface. A notification appears:
+
+            › Orientation Complete. Please take the user experience survey.
+            You click on the survey, and it shows a list of 45 questions.
+
+            Ugh, anthor useless tedious survey that no one will read. Your gaze shifts to the exit. The door stands slightly ajar, the sterile white hallway beyond it stretching into uncertainty.
+
+            Something tells you there won't be a second chance.
+
+            Options:
+
+            <a href="#" id="investigateLink"> ➡Take the survey. (See if there's anything hidden.)</a>
+            <a href="#" id="exitLink"> ➡ Walk out the door and proceed to Horizon Systems. </a>
+        </div>
+    </div>
+
+    <!-- Add this after the final choice overlay -->
+    <video class="center-video" id="centerVideo" preservesPitch>
+        <source src="center.mp4" type="video/mp4">
+    </video>
+
     <script type="module">
-        import { gateHints } from './gate_hints.js';
+        import { gateHints } from './gate_hints_1.js';
         import { maze } from './maze_data.js';
         
         //Notes： 
@@ -909,10 +1105,36 @@
                 }
             }
             
+            // Check if player has reached the center
+            const centerX = 15;  // Changed back to 15
+            const centerY = 15;  // Changed back to 15
+
+            if (newX === centerX && newY === centerY) {
+                // Start completion sequence
+                const centerVideo = document.getElementById('centerVideo');
+                const completionOverlay = document.getElementById('completionOverlay');
+                
+                // Show and play the video
+                centerVideo.style.display = 'block';
+                requestAnimationFrame(() => {
+                    centerVideo.style.opacity = '1';
+                    centerVideo.play();
+                });
+
+                // When video ends, keep last frame visible and show completion text
+                centerVideo.addEventListener('ended', () => {
+                    // Don't hide video, just show overlay on top
+                    completionOverlay.style.display = 'flex';
+                    requestAnimationFrame(() => {
+                        completionOverlay.style.opacity = '1';
+                    });
+                });
+            }
+            
             update();
         }
 
-        // Move S key handler to global scope
+        // Modify C key handler to only teleport
         document.addEventListener('keydown', (event) => {
             if (event.key === 'S' || event.key === 's') {
                 const welcomeScreen = document.getElementById('welcomeScreen');
@@ -935,6 +1157,11 @@
                         gameMessage.style.opacity = '0';
                     }, 5000);
                 }
+            } else if (event.key === 'C' || event.key === 'c') {
+                // Teleport to coordinates without triggering completion
+                playerX = 13;
+                playerY = 16;
+                update();
             }
         });
 
@@ -1110,6 +1337,63 @@
 
         // Remove the story overlay click handler
         document.getElementById('storyOverlay').removeEventListener('click', () => {});
+
+        // Update the completion notice link handler
+        document.getElementById('viewCompletionLink').addEventListener('click', (e) => {
+            e.preventDefault();
+            const completionOverlay = document.getElementById('completionOverlay');
+            const completionLetterOverlay = document.getElementById('completionLetterOverlay');
+
+            // Fade out completion overlay
+            completionOverlay.style.opacity = '0';
+
+            // After completion overlay fades out, show letter
+            setTimeout(() => {
+                completionOverlay.style.display = 'none';
+                completionLetterOverlay.style.display = 'flex';
+                
+                // Short delay before fading in the letter
+                requestAnimationFrame(() => {
+                    completionLetterOverlay.style.opacity = '1';
+                });
+            }, 1000);
+        });
+
+        // Add handlers for the completion letter links
+        document.getElementById('putAwayLink').addEventListener('click', (e) => {
+            e.preventDefault();
+            const completionLetterOverlay = document.getElementById('completionLetterOverlay');
+            const finalChoiceOverlay = document.getElementById('finalChoiceOverlay');
+
+            // Fade out letter
+            completionLetterOverlay.style.opacity = '0';
+
+            // Show final choice overlay
+            setTimeout(() => {
+                completionLetterOverlay.style.display = 'none';
+                finalChoiceOverlay.style.display = 'flex';
+                requestAnimationFrame(() => {
+                    finalChoiceOverlay.style.opacity = '1';
+                });
+            }, 1000);
+        });
+
+        document.getElementById('proceedLink').addEventListener('click', (e) => {
+            e.preventDefault();
+            // Handle proceeding to Horizon Systems
+            // This could redirect to another page or trigger another sequence
+        });
+
+        // Add handlers for the final choice links
+        document.getElementById('investigateLink').addEventListener('click', (e) => {
+            e.preventDefault();
+            // Handle investigating the screen
+        });
+
+        document.getElementById('exitLink').addEventListener('click', (e) => {
+            e.preventDefault();
+            // Handle exiting through the door
+        });
     </script>
 </body>
 </html>
