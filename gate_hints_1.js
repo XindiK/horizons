@@ -1,3 +1,6 @@
+//TODO: add C hints
+
+
 // Constants for common images
 const IMAGES = {
     A: {
@@ -17,6 +20,15 @@ const IMAGES = {
         B_5: "gen_images/B/B_5.webp",
         B_6: "gen_images/B/B_6.webp",
         B_7: "gen_images/B/B_7.webp",
+    },
+    C: {
+        C_1: "gen_images/C/C_1.webp",
+        C_2: "gen_images/C/C_2.webp",
+        C_3: "gen_images/C/C_3.webp",
+        C_4: "gen_images/C/C_4.webp",
+        C_5: "gen_images/C/C_5.webp",
+        C_6: "gen_images/C/C_6.webp",
+        C_7: "gen_images/C/C_7.webp",
     },
 };
 
@@ -39,21 +51,21 @@ export const gateHints = {
         text:"You are six years old.\n\n The toy robot in your hands hums to life as you twist the tiny switch on its back. Its red eyes flicker, its stiff plastic limbs whir as it takes clumsy steps forward on the scuffed wooden floor. You giggle. The small shop is warm, the air thick with the scent of solder and dust. Your parents are at the front, chatting with a customer about a broken radio, their voices blending into the static hum of an old television in the corner. \n\n Outside, the streets of Kowloon are alive—hawkers call out their wares, neon signs buzz overhead, casting long, colored shadows on the pavement. You barely notice. The only thing that matters is your robot.\n\n Then—snap. A piece comes loose. The robot stutters, then collapses. Your chest tightens. Panic. You broke it. \n\n Your grandfather, perched on his usual stool, chuckles. He has seen this before. With slow, practiced hands, he picks up the tiny broken wire and holds it under the light. “Machines are like people,” he says in Cantonese, his voice gravelly yet kind. “They need care. You just have to know how to listen to them. \n\n He hands you a screwdriver. The weight of it feels unfamiliar but exciting. As you pry open the toy's casing, you don't know it yet, but this moment—this smell, this dim shop, this lesson—will stay with you forever. \n\n Everything feels vaguely familiar yet distant, like a dream you're just beginning to remember.",
         image: IMAGES.A.A_1
     },
-    "21,28": {
+    "2,18": {
         layer: 2,
-        side: 3,
+        side: 4,
         title: "The Winder Machine",
         type: "B",
         text:"You are six years old.\n\n Snow falls silently outside the window, settling in thick layers over the narrow streets of Tromsø. The world is white, muted, frozen. Inside, the air smells of dust and metal, the tiny basement workshop lit only by a dim lamp flickering against the cold. \n\n You sit on the wooden floor, fingers stiff with the chill as you tinker with a small wind-up toy—your only toy. A metal bird with gears inside, a gift from a distant uncle you barely remember. You twist the key, and for a moment, it flutters. Then it stutters, hesitates, and falls still. \n\n Your father watches from his desk, hunched over a half-dismantled radio. He used to be an engineer, before things fell apart. Before the drinking. \n\n “You don’t have the hands for it,” he mutters, turning away. His voice is dull, a man who has long since stopped believing in much of anything. \n\n The cold seeps in through the cracks in the walls. You curl your fingers around the bird, holding it tight. You don't know it yet, but this feeling—the weight of something broken, something that should have worked—will follow you for the rest of your life.",
         image: IMAGES.B.B_1
     },
-    "2,18": {
+    "21,28"   : {
         layer: 2,
-        side: 4,
+        side: 3,
         type: "C",
         title: "Each step toward waking brings new understanding...",
-        text:"Wake up you are not supposed to be here. Don't be fooled by the light. It's a trick. \n\n The light is a trick. \n\n The warmth is a trick. \n\n The laughter is a trick. \n\n The music is a trick. \n\n The people are a trick. \n\n The city is a trick. \n\n The dream is a trick. \n\n Wake up.",
-        // image: IMAGES.C.C_1
+        text:"Wake up you are not supposed to be here. Don't be fooled by the light. It's a trick. \nThe light is a trick. \nThe warmth is a trick. \nThe laughter is a trick. \n\n The music is a trick. \nThe people are a trick. \nThe city is a trick. \nThe dream is a trick. \nWake up.",
+        image: IMAGES.C.C_1
     },
 
     // Third layer - The Road of Trials

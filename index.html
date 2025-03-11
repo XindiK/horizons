@@ -470,7 +470,7 @@
         <img src="logo_white.png" alt="Horizons Logo" class="welcome-logo" id="welcomeLogo">
         <div class="welcome-text" id="welcomeText">
             <h1>WELCOME TO HORIZONS</h1>
-            <p>[press Enter to continue]</p>
+            <p id="loadingText">loading assets...</p>
         </div>
     </div>
     <div class="game-container">
@@ -567,13 +567,11 @@
         <div class="completion-text">
             You step into the final chamber. The air feels heavier here, like the room has been here for an eternity.
 
-            A soft chime echoes through the room. The fluorescent glow above you pulses in slow, rhythmic waves—calming, deliberate. A screen flickers to life on the far wall.
-
-            'Orientation Complete.'
+            A soft chime echoes through the room. The fluorescent glow above you pulses in slow, rhythmic waves—calming, deliberate. A quiet beep. A automated voice announces: 'Orientation Complete.'
 
             You feel… different. Lighter. As if something has been taken from you. Or maybe you simply left it behind.
 
-            A quiet beep. A single prompt appears on the screen:
+            A letter slowly slides out of a slot in the wall:
 
             <a href="#" id="viewCompletionLink">[View Completion Notice]</a>
         </div>
@@ -627,13 +625,12 @@
             The screen on the far wall flickers, lines of text shifting under its surface. A notification appears:
 
             › Orientation Complete. Please take the user experience survey.
+            <!-- todo: add survey link-->
             You click on the survey, and it shows a list of 45 questions.
 
             Ugh, anthor useless tedious survey that no one will read. Your gaze shifts to the exit. The door stands slightly ajar, the sterile white hallway beyond it stretching into uncertainty.
 
             Something tells you there won't be a second chance.
-
-            Options:
 
             <a href="#" id="investigateLink"> ➡Take the survey. (See if there's anything hidden.)</a>
             <a href="#" id="exitLink"> ➡ Walk out the door and proceed to Horizon Systems. </a>
@@ -1241,7 +1238,93 @@
 
         update();
 
-        document.addEventListener('DOMContentLoaded', () => {
+        // Add this preloader code near the start of your script
+        async function preloadAssets() {
+            const assets = {
+                images: [],
+                videos: ['intro.mp4', 'center.mp4']
+            };
+
+            // Add all gate hint images to assets
+            for (const key in gateHints) {
+                const hint = gateHints[key];
+                if (hint.image) {
+                    assets.images.push(hint.image);
+                }
+            }
+
+            // Add logo images
+            assets.images.push('logo_white.png', 'logo_black.png');
+
+            // Log total assets to be loaded
+            console.log('Starting asset preload...');
+            console.log('Total images to load:', assets.images.length);
+            console.log('Total videos to load:', assets.videos.length);
+            console.log('Asset list:', {
+                images: assets.images,
+                videos: assets.videos
+            });
+
+            let loadedAssets = 0;
+            const totalAssets = assets.images.length + assets.videos.length;
+            const loadingText = document.getElementById('loadingText');
+
+            function updateLoadingProgress() {
+                loadedAssets++;
+                const progress = Math.round((loadedAssets / totalAssets) * 100);
+                loadingText.textContent = `loading assets... ${progress}%`;
+
+                if (loadedAssets === totalAssets) {
+                    console.log('All assets loaded successfully!');
+                    loadingText.textContent = '[press Enter to begin]';
+                    enableWelcomeScreen();
+                }
+            }
+
+            // Preload images
+            const imagePromises = assets.images.map(src => {
+                return new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        console.log('Loaded image:', src);
+                        updateLoadingProgress();
+                        resolve(img);
+                    };
+                    img.onerror = (error) => {
+                        console.error('Failed to load image:', src, error);
+                        reject(error);
+                    };
+                    img.src = src;
+                });
+            });
+
+            // Preload videos
+            const videoPromises = assets.videos.map(src => {
+                return new Promise((resolve, reject) => {
+                    const video = document.createElement('video');
+                    video.preload = 'auto';
+                    video.oncanplaythrough = () => {
+                        console.log('Loaded video:', src);
+                        updateLoadingProgress();
+                        resolve(video);
+                    };
+                    video.onerror = (error) => {
+                        console.error('Failed to load video:', src, error);
+                        reject(error);
+                    };
+                    video.src = src;
+                });
+            });
+
+            try {
+                await Promise.all([...imagePromises, ...videoPromises]);
+            } catch (error) {
+                console.error('Error during asset loading:', error);
+                loadingText.textContent = 'Error loading assets. Please refresh.';
+            }
+        }
+
+        function enableWelcomeScreen() {
             const welcomeScreen = document.getElementById('welcomeScreen');
             const welcomeLogo = document.getElementById('welcomeLogo');
             const welcomeText = document.getElementById('welcomeText');
@@ -1255,31 +1338,34 @@
             setTimeout(() => {
                 welcomeText.style.opacity = '1';
             }, 2500);
-            
-            function handleWelcomeScreen(event) {
-                if (event.key === 'Enter' && welcomeScreen.style.display !== 'none') {
-                    // Show and play the video immediately
-                    const video = document.getElementById('introVideo');
-                    const storyOverlay = document.getElementById('storyOverlay');
-                    
-                    video.style.display = 'block';
-                    requestAnimationFrame(() => {
-                        video.style.opacity = '1';
-                        video.play();
-                    });
 
-                    // Simple video end detection
-                    video.addEventListener("ended", function() {
-                        console.log("Video ended. Showing story overlay.");
-                        storyOverlay.style.display = 'flex';
-                        setTimeout(() => {
-                            storyOverlay.style.opacity = '1';
-                        }, 100);
-                    });
-                }
-            }
-            
+            // Enable Enter key handler
             document.addEventListener('keydown', handleWelcomeScreen);
+        }
+
+        function handleWelcomeScreen(event) {
+            if (event.key === 'Enter' && document.getElementById('welcomeScreen').style.display !== 'none') {
+                const video = document.getElementById('introVideo');
+                const storyOverlay = document.getElementById('storyOverlay');
+                
+                video.style.display = 'block';
+                requestAnimationFrame(() => {
+                    video.style.opacity = '1';
+                    video.play();
+                });
+
+                video.addEventListener("ended", function() {
+                    storyOverlay.style.display = 'flex';
+                    setTimeout(() => {
+                        storyOverlay.style.opacity = '1';
+                    }, 100);
+                });
+            }
+        }
+
+        // Start preloading when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            preloadAssets();
         });
 
         // Modify the click handlers
