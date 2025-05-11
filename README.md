@@ -1,43 +1,17 @@
-# Project Title
+# Horizon Systems
 An interactive narrative experience on the theme of identity and memory in the context of AI. Player is placed in a maze and must navigate through it to find the exit, or is there actually a way out?
 
 ## Features
-- [Feature 1] - Describe what it does.
-- [Feature 2] - Highlight another key functionality.
-- [Feature 3] - Mention any notable integrations or technologies used.
+- Players navigate a maze that challenges their perception of reality and identity through interactive storytelling.
+- The maze adapts to player decisions, offering a unique path and experience with each playthrough.
+- Players encounter various emotional states that influence their journey and decision-making process.
+- Critical decisions made by players affect the narrative outcome, providing multiple endings.
+- Smooth transitions and overlays enhance the storytelling and gameplay experience.
 
-## Installation
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-username/repo-name.git
    ```
-2. Navigate to the project directory:
-   ```bash
-   cd repo-name
-   ```
-3. Install dependencies:
-   ```bash
-   [Insert installation command]
-   ```
-
-## Usage
-1. Run the project:
-   ```bash
-   [Insert command to run project]
-   ```
-2. Access the application via [insert URL or instructions].
-
-## Contributing
-Contributions are welcome! Please follow these steps:
-1. Fork the repository.
-2. Create a new branch (`git checkout -b feature-branch`).
-3. Commit your changes (`git commit -m 'Add feature'`).
-4. Push to the branch (`git push origin feature-branch`).
-5. Open a Pull Request.
 
 ## License
-This project is licensed under the [Insert License Name].
+This project is licensed under MIT.
 
 ## Additional Information
-For more details, you can check out the [Backstory](backstory.md) of the project.
-
+For spoilers, check out the [Backstory](backstory.md) of the project.

@@ -1,0 +1,533 @@
+body {
+    background-color: #1c1a1a;  /* Match the canvas background */
+    margin: 0px;
+    min-height: 100vh;  /* Full viewport height */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;  /* Center vertically */
+    padding: 0px;
+    overflow: hidden;  /* Disable scrolling */
+}
+.game-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+}
+canvas {
+    width: 740px;
+    height: 640px;
+    /* border: 1px solid #000000; */
+}
+.hint-container {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    /* transition: width 0.02s ease; */
+}
+
+.hint-container.expanded {
+    width: 100vw;
+    height: 100vh;
+}
+
+.hint-image {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    opacity: 0;
+    /* Only transition for fade out */
+    transition: opacity 1s ease-out;
+    /* Add will-change to improve performance */
+    will-change: opacity;
+}
+
+#hintCanvas {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+    /* Only transition for fade out */
+    transition: opacity 1s ease-out;
+    will-change: opacity;
+}
+.controls {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    margin-top: 10px;
+    color: #b5b5b5;
+    display: flex;
+    gap: 20px;
+}
+
+#coordTooltip {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.8);
+    color: #b5b5b5;
+    padding: 5px;
+    border-radius: 3px;
+    font-size: 12px;
+    pointer-events: none;
+    display: none;
+}
+.gate-list {
+    position: absolute;
+    top: 60px;
+    left: 20px;
+    color: #b5b5b5;
+    margin-top: 10px;
+    font-family: monospace;
+    max-width: 700px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.gate-coordinates {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 3px 6px;
+    border-radius: 3px;
+}
+.welcome-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: black;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    transition: opacity 1s ease-out;  /* Smooth fade out */
+}
+
+.welcome-logo {
+    opacity: 0;
+    max-width: 100px;
+    transition: opacity 2s ease-in;
+}
+
+.welcome-text {
+    color: white;
+    /* font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; */
+    font-family: "Avenir Next", Avenir, sans-serif;
+    font-weight: 600; /* Semi-bold */
+    letter-spacing: 2px;;
+    text-align: center;
+    margin-top: 20px;
+    opacity: 0;
+    transition: opacity 1s ease-in;
+}
+
+.welcome-text h1 {
+    font-size: 20px;
+    margin-bottom: 10px;
+    font-weight: 600;
+    letter-spacing: 4px;
+}
+
+.welcome-text p {
+    font-size: 14px;
+    color: #888;
+    font-weight: 300;
+    letter-spacing: 2px;
+}
+
+.hidden {
+    display: none;
+}
+
+.intro-video {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    background: black;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.story-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;  /* Changed from flex to none initially */
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1001;  /* Make sure it's above the video */
+    opacity: 0;
+    transition: opacity 1s ease-in;
+    padding: 20px;
+}
+
+.story-text {
+    color: white;
+    font-family: "Courier New", Courier, monospace;
+    max-width: 1000px;
+    line-height: 1.6;
+    white-space: pre-line;
+    text-align: left;
+}
+
+.story-text a {
+    color: #4a9eff;
+    text-decoration: none;
+}
+
+.story-text a:hover {
+    text-decoration: underline;
+}
+
+.letter-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);  /* Semi-transparent background */
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1002;
+    opacity: 0;
+    transition: opacity 0.3s ease;  /* Faster transition */
+}
+
+.letter-content {
+    background: white;
+    padding: 32px;
+    max-width: 520px;  /* Slightly wider */
+    max-height: 90vh;  /* Taller to reduce need for scrolling */
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    /* overflow-y: auto; */
+}
+
+/* Add some styling for the scrollbar */
+/* .letter-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.letter-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.letter-content::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.letter-content::-webkit-scrollbar-thumb:hover {
+    background: #555;
+} */
+
+.letter-text {
+    color: #000;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 13px;  /* Slightly smaller base font */
+    line-height: 1.4;
+    white-space: pre-line;
+}
+
+/* Make header smaller than body text */
+.letter-text .header {
+    font-size: 12px;  /* Smaller than base text */
+    font-weight: 600;
+    margin-bottom: 12px;
+    text-transform: uppercase;  /* Keep it distinct */
+    letter-spacing: 0.5px;
+}
+
+/* Keep signature and quote small */
+.letter-signature {
+    margin-top: 12px;
+    margin-bottom: 12px;
+    font-size: 11px;
+}
+
+.letter-quote {
+    font-style: italic;
+    margin-bottom: 16px;
+    font-size: 11px;
+}
+
+.letter-text p {
+    margin: 6px 0;  /* Reduce paragraph spacing */
+}
+
+/* Add specific styling for the signature section */
+.letter-text a {
+    color: #0066cc;
+    text-decoration: none;
+    display: block;
+    margin-top: 20px;
+    text-align: right;
+    font-size: 11px;
+}
+
+.letter-text a:hover {
+    text-decoration: underline;
+}
+
+/* Adjust letter logo size */
+.letter-text img {
+    width: 64px !important;  /* 80 * 0.8 = 64 */
+    float: left;
+    margin-right: 16px;  /* 20 * 0.8 = 16 */
+}
+
+.maze-wrapper {
+    position: relative;  /* For hint canvas positioning */
+    display: flex;      /* Add this */
+    justify-content: center;  /* Add this */
+    align-items: center;      /* Add this */
+}
+
+.hint-background {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition: opacity 1s ease-out;
+    z-index: 1;  /* Between image and text */
+}
+
+.hint-text {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    color: #b5b5b5;
+    font-family: Arial, sans-serif;
+    font-size: 12px;  /* Changed from 16px to 14px */
+    text-align: left;
+    white-space: pre-line;
+    z-index: 2;
+    opacity: 0;
+    transition: opacity 1s ease-out;
+    text-shadow: 0 0 40px rgba(0, 0, 0, 0.7);
+    pointer-events: auto; /* Change from none to auto to allow clicking */
+    max-width: 640px;
+    line-height: 1.2;  /* Added line-height for better readability */
+}
+
+.hint-reminder {
+    position: absolute;
+    left: 50%;
+    bottom: 60px;  /* Distance from bottom */
+    transform: translateX(-50%);
+    color: #7b7a7a;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    text-align: center;
+    z-index: 2;
+    opacity: 0;
+    transition: opacity 1s ease-out;
+    text-shadow: 0 0 40px rgba(0, 0, 0, 0.7);
+    pointer-events: none;
+}
+
+.memory-text {
+    line-height: 1.6;
+    margin-bottom: 0px;
+}
+
+/* Styles for memory choices */
+.memory-choices {
+    margin-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    padding-top: 5px;
+}
+
+.choice-prompt {
+    font-size: 14px;
+    margin-bottom: 15px;
+    color: #aaa;
+}
+
+.choice-label {
+    font-size: 10px;
+    margin-bottom: 5px;
+    color: #bbb;
+    font-style: italic;
+}
+
+.choice-group {
+    margin-bottom: 5px;
+}
+
+.choice-options {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.choice-pair {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.choice-btn {
+    font-size: 12px;
+    position: relative; /* Ensure buttons are positioned relative to their container */
+    z-index: 1005; /* Set a high z-index to ensure they are on top of other elements */
+    background: rgba(0, 0, 0, 0.5); /* Background for better visibility */
+    color: #b5b5b5; /* Text color */
+    border: none; /* Remove default border */
+    padding: 10px; /* Add padding for better click area */
+    border-radius: 4px; /* Rounded corners */
+    cursor: pointer; /* Change cursor to pointer on hover */
+    transition: background 0.3s; /* Smooth background transition */
+}
+
+.choice-btn:hover {
+    background: rgba(255, 255, 255, 0.2); /* Change background on hover */
+}
+
+.choice-btn.selected {
+    background: rgba(70, 130, 180, 0.3);
+    border-color: rgba(70, 130, 180, 0.8);
+    color: white;
+}
+
+.selected-choice {
+    color: #4a9eff;
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+.completion-video {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    background: black;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    display: none;
+}
+
+.completion-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1001;
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+}
+
+.completion-text {
+    color: white;
+    font-family: "Courier New", Courier, monospace;
+    max-width: 800px;
+    line-height: 1.6;
+    white-space: pre-line;
+    text-align: left;
+}
+
+.completion-text a {
+    color: #4a9eff;
+    text-decoration: none;
+    display: inline-block;
+    margin-top: 20px;
+}
+
+.completion-text a:hover {
+    text-decoration: underline;
+}
+
+.completion-letter-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1003;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.final-choice-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1004;
+    opacity: 0;
+    transition: opacity 1s ease-in;
+    padding: 20px;
+}
+
+.final-choice-overlay a {
+    display: block;
+    margin-top: 20px;
+    color: #4a9eff;
+    text-decoration: none;
+}
+
+.final-choice-overlay a:hover {
+    text-decoration: underline;
+}
+
+.center-video {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    background: black;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    display: none;
+}
