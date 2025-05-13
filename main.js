@@ -589,7 +589,7 @@ function movePlayer(dx, dy) {
             // Don't hide video, just show overlay on top
             completionOverlay.style.display = 'flex';
             setTimeout(() => {
-                completionOverlay.style.opacity = '1';
+                completionOverlay.style.opacity = '0.7';
             }, 50);
         });
     }
@@ -624,6 +624,26 @@ document.addEventListener('keydown', (event) => {
         playerX = 13;
         playerY = 16;
         update();
+    } else if (event.key === 'V' || event.key === 'v') {
+        // skip to completionOverlay
+        const completionOverlay = document.getElementById('completionOverlay');
+        completionOverlay.style.display = 'flex';
+        setTimeout(() => {
+            completionOverlay.style.opacity = '0.7';
+        }, 50);
+        // hide welcome screen
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        welcomeScreen.style.display = 'none';
+        // hide maze canvas
+        const mazeCanvas = document.getElementById('mazeCanvas');
+        mazeCanvas.style.display = 'none';
+        // hide hint canvas
+        const hintCanvas = document.getElementById('hintCanvas');
+        hintCanvas.style.display = 'none';
+        // show completion video
+        const completionVideo = document.getElementById('completionVideo');
+        completionVideo.style.display = 'block';
+        completionVideo.play();
     }
 });
 
@@ -900,6 +920,10 @@ document.addEventListener('DOMContentLoaded', () => {
     preloadAssets();
 });
 
+
+
+
+
 // Modify the click handlers
 document.getElementById('readLetterLink').addEventListener('click', (e) => {
     e.preventDefault();
@@ -927,108 +951,12 @@ document.getElementById('finishReadingLink').addEventListener('click', (e) => {
     const storyOverlay = document.getElementById('storyOverlay');
 
     // Fade out letter overlay
+    letterOverlay.style.display = 'none';
+    letterOverlay.style.visibility = 'hidden';
     letterOverlay.style.opacity = '0';
 
-    // Define the readLetterAgainHandler function here so it's in scope
-    const readLetterAgainHandler = function(e) {
-        e.preventDefault();
-        const storyOverlay = document.getElementById('storyOverlay');
-        const letterOverlay = document.getElementById('letterOverlay');
-        
-        // Fade out story overlay
-        storyOverlay.style.opacity = '0';
-        
-        // Show letter again
-        setTimeout(() => {
-            storyOverlay.style.display = 'none';
-            letterOverlay.style.display = 'flex';
-            
-            requestAnimationFrame(() => {
-                letterOverlay.style.opacity = '1';
-            });
-        }, 1000);
-    };
-    
-    // Define the lookAroundHandler function here so it's in scope
-    const lookAroundHandler = function(e) {
-        e.preventDefault();
-        const storyOverlay = document.getElementById('storyOverlay');
-        
-        // Fade out story overlay
-        storyOverlay.style.opacity = '0';
-        
-        setTimeout(() => {
-            // Update story text with new content about looking around
-            const storyText = document.querySelector('.story-text');
-            storyText.innerHTML = `
-                Etched on the door handle is a faint line that says 'orientation chamber'.
-                
-                <div style="margin-top: 30px;">
-                    <a href="#" id="proceedToChamberLink" style="margin-top: 15px; display: inline-block;">➡ Proceed to orientation chamber</a><br>
-                    <a href="#" id="backLink">➡ Go Back</a>
-                </div>
-            `;
-
-            // Add event listeners for the new links
-            document.getElementById('proceedToChamberLink').addEventListener('click', function(e) {
-                e.preventDefault();
-                // Add your logic here to proceed to the orientation chamber
-                const video = document.getElementById('introVideo');
-                const storyOverlay = document.getElementById('storyOverlay');
-                const letterOverlay = document.getElementById('letterOverlay');
-                const welcomeScreen = document.getElementById('welcomeScreen');
-                letterOverlay.style.display = 'none';
-                storyOverlay.style.display = 'none';
-                video.style.display = 'none';
-                welcomeScreen.style.display = 'none';
-            });
-            
-            // Show the story overlay with updated content
-            storyOverlay.style.display = 'flex';
-            setTimeout(() => {
-                storyOverlay.style.opacity = '1';
-                
-                // Add event listeners for the new links
-                document.getElementById('backLink').addEventListener('click', function(e) {
-                    e.preventDefault();
-                    
-                    // Fade out story overlay
-                    storyOverlay.style.opacity = '0';
-                    
-                    setTimeout(() => {
-                        // Update story text back to previous content
-                        const storyText = document.querySelector('.story-text');
-                        storyText.innerHTML = `
-                            The letter's language feels cryptic and cold. Applicant? AI research? Neuro-Interface? \n\n
-                            Am I here because of an AI research project? \n\n
-                            Questions linger in your mind... \n\n
-                            You look around this room, which seems to be part of an office or a research lab, it seems your only way out is through that mysterious door.
-                            
-                            <div style="margin-top: 30px;">
-                                <a href="#" id="lookAroundLink">➡ Go to the door</a><br>
-                                <a href="#" id="readLetterAgainLink" style="margin-top: 15px; display: inline-block;">➡ Read letter again</a>
-                            </div>
-                        `;
-                        
-                        // Show the story overlay with updated content
-                        storyOverlay.style.display = 'flex';
-                        setTimeout(() => {
-                            storyOverlay.style.opacity = '1';
-                            
-                            // Add event listeners for the new links
-                            document.getElementById('lookAroundLink').addEventListener('click', lookAroundHandler);
-                            document.getElementById('readLetterAgainLink').addEventListener('click', readLetterAgainHandler);
-                        }, 100);
-                    }, 1000);
-                });
-            }, 100);
-        }, 1000);
-    };
-
     // Remove overlays and show message
-    setTimeout(() => {
-        letterOverlay.style.display = 'none';
-        
+    // setTimeout(() => {
         // Update story text with new content
         const storyText = document.querySelector('.story-text');
         storyText.innerHTML = `
@@ -1042,15 +970,132 @@ document.getElementById('finishReadingLink').addEventListener('click', (e) => {
                 <a href="#" id="readLetterAgainLink" style="margin-top: 15px; display: inline-block;">➡ Read letter again</a>
             </div>
         `;
-        
         // Show the story overlay with updated content
         storyOverlay.style.display = 'flex';
         setTimeout(() => {
             storyOverlay.style.opacity = '1';
+        },100);
+
+        // event listener for readletteragain link
+        document.getElementById('readLetterAgainLink').addEventListener('click', (e) => {
+            e.preventDefault();
+            const storyOverlay = document.getElementById('storyOverlay');
+            const letterOverlay = document.getElementById('letterOverlay');
             
-            // Add event listeners for the new links
-            document.getElementById('lookAroundLink').addEventListener('click', lookAroundHandler);
-            document.getElementById('readLetterAgainLink').addEventListener('click', readLetterAgainHandler);
-        }, 100);
-    }, 1000);
+            // Fade out story overlay
+            storyOverlay.style.opacity = '0';
+            
+            // Show letter again
+            setTimeout(() => {
+                storyOverlay.style.display = 'none';
+                letterOverlay.style.display = 'flex';
+                letterOverlay.style.display = 'visible !important';
+                
+                requestAnimationFrame(() => {
+                    letterOverlay.style.opacity = '1';
+                });
+            }, 1000);
+        });
+
+            
+        // event listener for look around link
+        document.getElementById('lookAroundLink').addEventListener('click', (e) => {
+
+            e.preventDefault();
+            const storyOverlay = document.getElementById('storyOverlay');
+            
+            // Fade out story overlay
+            storyOverlay.style.opacity = '1';
+            
+            // setTimeout(() => {
+                // Update story text with new content about looking around
+                const storyText = document.querySelector('.story-text');
+                storyText.innerHTML = `
+                    Etched on the door handle is a faint line that says 'orientation chamber'.
+                    
+                    <div style="margin-top: 30px;">
+                        <a href="#" id="proceedToChamberLink" style="margin-top: 15px; display: inline-block;">➡ Proceed to orientation chamber</a><br>
+                        <a href="#" id="backLink">➡ Go Back</a>
+                    </div>
+                `;
+            // Show the story overlay with updated content
+            storyOverlay.style.display = 'flex';
+            setTimeout(() => {
+            storyOverlay.style.opacity = '1';
+
+            //event listener for back link
+            document.getElementById('backLink').addEventListener('click', (e) => {
+                e.preventDefault();
+                // Fade out story overlay
+                storyOverlay.style.opacity = '0';
+                
+                setTimeout(() => {
+                    // Update story text back to previous content
+                    const storyText = document.querySelector('.story-text');
+                    storyText.innerHTML = `
+                        The letter's language feels cryptic and cold. Applicant? AI research? Neuro-Interface? \n\n
+                        Am I here because of an AI research project? \n\n
+                        Questions linger in your mind... \n\n
+                        You look around this room, which seems to be part of an office or a research lab, it seems your only way out is through that mysterious door.
+                        
+                        <div style="margin-top: 30px;">
+                            <a href="#" id="lookAroundLink">➡ Go to the door</a><br>
+                            <a href="#" id="readLetterAgainLink" style="margin-top: 15px; display: inline-block;">➡ Read letter again</a>
+                        </div>
+                    `;
+                    
+                    // Show the story overlay with updated content
+                    storyOverlay.style.display = 'flex';
+                    setTimeout(() => {
+                        storyOverlay.style.opacity = '1';
+                    },100);
+                });
+            });
+
+            // event listeners for proceed to chamber link
+            document.getElementById('proceedToChamberLink').addEventListener('click', function(e) {
+                e.preventDefault();
+                // Add your logic here to proceed to the orientation chamber
+                const video = document.getElementById('introVideo');
+                const storyOverlay = document.getElementById('storyOverlay');
+                const letterOverlay = document.getElementById('letterOverlay');
+                const welcomeScreen = document.getElementById('welcomeScreen');
+                letterOverlay.style.display = 'none';
+                storyOverlay.style.display = 'none';
+                video.style.display = 'none';
+                welcomeScreen.style.display = 'none';
+            });
+        });
+    });
+});
+
+
+
+// add event listener for view completion link
+document.getElementById('viewCompletionLink').addEventListener('click', (e) => {
+    e.preventDefault();
+    const completionLetterOverlay = document.getElementById('completionLetterOverlay');
+    //hide completion overlay
+    completionOverlay.style.display = 'none';
+    completionOverlay.style.visibility = 'hidden';
+    completionOverlay.style.opacity = '0';
+    //show completion letter overlay
+    completionLetterOverlay.style.display = 'flex';
+    completionLetterOverlay.style.visibility = 'visible';
+    completionLetterOverlay.style.opacity = '1';
+});
+
+// add event listener for put away link
+document.getElementById('putAwayLink').addEventListener('click', (e) => {
+    e.preventDefault();
+    // const completionLetterOverlay = document.getElementById('completionLetterOverlay');
+    // completionLetterOverlay.style.display = 'none';
+    // completionOverlay.style.display = 'flex';
+    // completionOverlay.style.opacity = '0.7';
+
+    //show final choice overlay
+    const finalChoiceOverlay = document.getElementById('finalChoiceOverlay');
+    finalChoiceOverlay.style.display = 'flex';
+    finalChoiceOverlay.style.visibility = 'visible';
+    finalChoiceOverlay.style.opacity = '1';
 });
