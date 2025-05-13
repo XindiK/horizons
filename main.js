@@ -43,6 +43,22 @@ let showGates = false;
 let showCoordinates = false;
 const tooltip = document.getElementById('coordTooltip');
 
+// Add background music control
+const bgMusic = document.getElementById('bgMusic');
+bgMusic.volume = 0.3; // Set initial volume to 30%
+
+// Function to start background music
+function startBackgroundMusic() {
+    bgMusic.play().catch(error => {
+        console.log('Background music autoplay failed:', error);
+    });
+}
+
+// Function to pause background music
+function pauseBackgroundMusic() {
+    bgMusic.pause();
+}
+
 // Add event listener for checkbox
 document.getElementById('gateToggle').addEventListener('change', (e) => {
     showGates = e.target.checked;
@@ -899,6 +915,9 @@ function handleWelcomeScreen(event) {
     if (event.key === 'Enter' && document.getElementById('welcomeScreen').style.display !== 'none') {
         const video = document.getElementById('introVideo');
         const storyOverlay = document.getElementById('storyOverlay');
+        
+        // Start background music when game begins
+        startBackgroundMusic();
         
         video.style.display = 'block';
         requestAnimationFrame(() => {
